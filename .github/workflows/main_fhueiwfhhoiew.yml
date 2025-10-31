@@ -26,6 +26,18 @@ jobs:
       - name: Build solution
         run: dotnet build eShopOnWeb.sln --configuration Release --no-restore
 
+      - name: Install EF Core tool
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Apply database migrations
+        env:
+          CatalogConnection: "Server=tcp:abc-sandbox-app-server.database.windows.net,1433;Initial Catalog=abc-sandbox-app-catalog;User ID=abc-sandbox-app-server-admin;Password=eP7SKTVae4wC$VT7;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+          IdentityConnection: "Server=tcp:abc-sandbox-app-server.database.windows.net,1433;Initial Catalog=abc-sandbox-app-identity;User ID=abc-sandbox-app-server-admin;Password=eP7SKTVae4wC$VT7;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet ef database update -c CatalogContext -p ./src/Infrastructure/Infrastructure.csproj -s ./src/Web/Web.csproj --connection "$CatalogConnection"
+          dotnet ef database update -c AppIdentityDbContext -p ./src/Infrastructure/Infrastructure.csproj -s ./src/Web/Web.csproj --connection "$IdentityConnection"
+
       - name: Publish
         run: dotnet publish eShopOnWeb.sln -c Release -o ${{env.DOTNET_ROOT}}/myapp --no-restore
 
